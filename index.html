@@ -14,7 +14,6 @@ html,body{height:100%;overflow:hidden;background:#0b0f22;font-family:'Segoe UI',
 .panel{background:linear-gradient(180deg,#1a2350,#0e1533);border:1px solid rgba(120,200,255,.25);border-radius:22px;padding:22px 18px;max-width:420px;width:94%;text-align:center;max-height:94vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .logo{font-size:38px;font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,#7ef2ff,#c07bff,#ff7bd0);-webkit-background-clip:text;background-clip:text;color:transparent}
 .sub{font-size:12.5px;opacity:.75;margin:6px 0 14px}
-.hrow{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
 .gname{width:100%;max-width:260px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.25);color:#eef3ff;border-radius:12px;padding:11px;font-size:15px;font-family:inherit;text-align:center}
 .gbtn{padding:12px 22px;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#7ef2ff,#3aa0ff);color:#04162e}
 .gbtn.gold{background:linear-gradient(135deg,#ffd86b,#ff9a3d);color:#402a00}
@@ -37,7 +36,6 @@ html,body{height:100%;overflow:hidden;background:#0b0f22;font-family:'Segoe UI',
 @keyframes sp{to{transform:rotate(360deg)}}
 #lobbyInfo{font-size:14px;font-weight:800;margin:10px 0}
 .codeBox{font-size:22px;font-weight:900;letter-spacing:3px;color:#7ef2ff;background:rgba(255,255,255,.08);border-radius:12px;padding:8px;display:inline-block;margin:4px 0}
-/* боевой HUD */
 #hud{position:fixed;inset:0;pointer-events:none;z-index:10;display:none}
 .bars{position:absolute;left:10px;top:10px;width:min(46vw,240px)}
 .hpbar{height:14px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.25);border-radius:8px;overflow:hidden}
@@ -67,7 +65,6 @@ html,body{height:100%;overflow:hidden;background:#0b0f22;font-family:'Segoe UI',
 </head>
 <body>
 
-<!-- ЭКРАН: ГЛАВНОЕ МЕНЮ -->
 <div class="screen show" id="scrMenu"><div class="panel">
  <div class="logo">ЭХО АРЕНЫ</div>
  <div class="sub">Батл-рояль героев · 12 бойцов · живой мультиплеер</div>
@@ -85,7 +82,6 @@ html,body{height:100%;overflow:hidden;background:#0b0f22;font-family:'Segoe UI',
  <div class="tiny" style="margin-top:8px">Оружие своё у каждого героя — менять не надо, прокачивай умение 💪</div>
 </div></div>
 
-<!-- ЭКРАН: ПОИСК МАТЧА / КОД КОМНАТЫ -->
 <div class="screen" id="scrLobby"><div class="panel">
  <div class="logo" style="font-size:24px">ПОИСК БОЯ</div>
  <div class="spin"></div>
@@ -95,7 +91,6 @@ html,body{height:100%;overflow:hidden;background:#0b0f22;font-family:'Segoe UI',
  <button class="gbtn" id="bLobbyOut" style="margin-top:12px">Отмена</button>
 </div></div>
 
-<!-- ЭКРАН: ИТОГИ -->
 <div class="screen" id="scrEnd"><div class="panel">
  <h2 id="endT" style="font-size:26px;color:#7ef2ff">Матч завершён</h2>
  <div class="res" id="endRes" style="text-align:center"></div>
@@ -109,7 +104,7 @@ html,body{height:100%;overflow:hidden;background:#0b0f22;font-family:'Segoe UI',
   <div class="hpbar"><div class="hpfill" id="hpF"></div></div>
   <div class="shbar"><div class="shfill" id="shF"></div></div>
   <div class="wtag" id="wTag"></div>
-  <div class="wtag" id="ultTag" style="color:#ffd86b">⚡ заряжается…</div>
+  <div style="height:8px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.2);border-radius:6px;overflow:hidden;margin-top:3px"><div id="ultfill" style="height:100%;width:0;background:linear-gradient(90deg,#ffd86b,#ff5ce0)"></div></div>
  </div>
  <div id="topMid"></div>
  <canvas id="mini" width="96" height="96"></canvas>
@@ -142,13 +137,10 @@ const IS_TOUCH=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;const h=$('toast');if(!h)return;h.appendChild(d);setTimeout(()=>d.remove(),2200);}
 
-/* ================= КОНФИГ SUPABASE (как в «Зини») ================= */
 const SUPA_CFG={url:'https://clxewmkuntmgtbovrgqk.supabase.co',key:'sb_publishable_LwCY23gqbFpUpJGhpXTlKQ_anyBHyHX'};
 let SB=null;
 try{SB=window.supabase.createClient(SUPA_CFG.url,SUPA_CFG.key);}catch(e){SB=null;}
 
-/* ================= ГЕРОИ: у каждого своё оружие ================= */
-/* wpn: r=радиус снаряда, dmg, rate=мс между выстрелами, spd, rng, cnt=снарядов за выстрел, melee=ближний бой */
 const HEROES=[
  {k:'klyk',n:'Клык',r:'Штурмовик',g1:'#ff9a3d',g2:'#d03a3a',gl:'rgba(255,120,60,.6)',ic:'🔥',
   wpn:{n:'Дробовик «Клык»',dmg:13,rate:700,spd:560,rng:330,cnt:4,spread:.28},
@@ -166,7 +158,7 @@ const HEROES=[
   wpn:{n:'Винтовка «Разряд»',dmg:34,rate:1300,spd:1000,rng:1000,cnt:1,slow:2},
   ab:{n:'Заряженный выстрел',cd:9},ult:{n:'Ливень',d:'залп по площади'}},
  {k:'noktis',n:'Ноктис',r:'Хитран',g1:'#c9b0ff',g2:'#5b2fc0',gl:'rgba(170,120,255,.6)',ic:'🌙',
-  wpn:{n:'Арбалет «Шёпот»',dmg:16,rate:420,spd:780,rng:640,cnt:1,pierce:false},
+  wpn:{n:'Арбалет «Шёпот»',dmg:16,rate:420,spd:780,rng:640,cnt:1},
   ab:{n:'Дым-завеса',cd:8},ult:{n:'Час призрака',d:'отряд невидим, 3 сек'}}
 ];
 const MODES={
@@ -177,22 +169,19 @@ const MODES={
 };
 let MODE='solo',HERO='klyk';
 
-/* ================= ПРОФИЛЬ ================= */
 let PROFILE={name:'',trophies:0,wins:0,matches:0};
 try{PROFILE=Object.assign(PROFILE,JSON.parse(localStorage.getItem('eho_profile')||'{}'));}catch(e){}
 function saveProfile(){localStorage.setItem('eho_profile',JSON.stringify(PROFILE));}
 const ligaOf=t=>t<50?'🥉 Медь':t<120?'🥈 Бронза':t<250?'🥇 Серебро':t<500?'🏆 Золото':t<900?'💠 Платина':t<1500?'💎 Алмаз':'👑 Легенда';
-function renderProfile(){
- $('profStat').textContent='🏆 '+PROFILE.trophies+' · '+ligaOf(PROFILE.trophies);
-}
+function renderProfile(){$('profStat').textContent='🏆 '+PROFILE.trophies+' · '+ligaOf(PROFILE.trophies);}
 renderProfile();
 
-/* ================= ЭКРАНЫ И ВЫБОР ================= */
 function showScr(id){
  ['scrMenu','scrLobby','scrEnd'].forEach(s=>$(s).classList.remove('show'));
  if(id)$(id).classList.add('show');
 }
-let heroUnlocked={klyk:true,mira:false,askold:false,yula:false,groza:false,noktis:false};
+/* герои открыты все */
+let heroUnlocked={klyk:true,mira:true,askold:true,yula:true,groza:true,noktis:true};
 try{heroUnlocked=Object.assign(heroUnlocked,JSON.parse(localStorage.getItem('eho_heroes')||'{}'));}catch(e){}
 function saveHeroes(){localStorage.setItem('eho_heroes',JSON.stringify(heroUnlocked));}
 function renderHeroes(){
@@ -204,7 +193,7 @@ function renderHeroes(){
  $('heroInfo').innerHTML='<b>'+h.n+'</b> ('+h.r+') · '+h.wpn.n+'<br>Умение: '+h.ab.n+' · Ульта: '+h.ult.n+' — '+h.ult.d;
  document.querySelectorAll('.heroB').forEach(b=>b.onclick=()=>{
   const k=b.dataset.k;
-  if(!heroUnlocked[k]){toast('🔒 Герой откроется на '+HEROES.findIndex(x=>x.k===k)*1+'-м уровне лиги');return;}
+  if(!heroUnlocked[k]){toast('🔒 Герой ещё закрыт');return;}
   HERO=k;renderHeroes();
  });
 }
@@ -215,10 +204,8 @@ document.querySelectorAll('.modeB').forEach(b=>b.onclick=()=>{
 });
 $('inpName').value=PROFILE.name||'';
 
-/* ================= МАТЧМЕЙКИНГ (REST + Realtime) ================= */
 const MM={matchId:null,isHost:false,players:[],team:0,mode:null,ch:null,pollTimer:null,started:false};
 function myName(){const v=$('inpName').value.trim();return v?v.slice(0,12):'Боец';}
-function sHead(){return{'apikey':SUPA_CFG.key,'Authorization':'Bearer '+SUPA_CFG.key,'Content-Type':'application/json'};}
 
 function openLobbySearch(){
  MM.mode=MODE;MM.started=false;MM.players=[];MM.team=0;
@@ -232,17 +219,24 @@ function openLobbySearch(){
 async function lobbyTick(){
  if(MM.started)return;
  try{
-  /* ищем открытый матч */
+  /* 1) ищем уже начавшийся матч, где мы в ростере */
+  const rp=await SB.from('eho_matches').select('*').eq('status','playing').limit(20);
+  const mine=(rp.data||[]).find(m=>(m.players||[]).some(p=>p.pid===PROFILE.pid));
+  if(mine){
+   MM.matchId=mine.id;MM.isHost=mine.host_id===PROFILE.pid;
+   beginNetworkMatch({matchId:mine.id,players:mine.players,mode:mine.mode,seed:Date.now(),hostSim:!MM.isHost});
+   return;
+  }
+  /* 2) ищем открытую комнату */
   const r=await SB.from('eho_matches').select('*').eq('status','waiting').eq('mode',MM.mode).order('created_at',{ascending:true}).limit(8);
   const rows=(r.data||[]);
   let joined=null;
   for(const m of rows){
    const ps=m.players||[];
-   if(ps.some(p=>p.pid===PROFILE.pid))joined=m;   /* уже в нём */
+   if(ps.some(p=>p.pid===PROFILE.pid))joined=m;
    else if(ps.length<MODES[MM.mode].cap){joined=m;break;}
   }
   if(!joined){
-   /* создаём свой матч */
    if(!PROFILE.pid)PROFILE.pid='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
    const ins=await SB.from('eho_matches').insert({mode:MM.mode,host_id:PROFILE.pid,status:'waiting',players:[{pid:PROFILE.pid,name:myName(),hero:HERO,ready:true}]}).select().single();
    if(ins.error){$('lobbyInfo').textContent='Ошибка сети, пробуем снова…';return;}
@@ -250,7 +244,6 @@ async function lobbyTick(){
   }
   MM.matchId=joined.id;
   MM.isHost=joined.host_id===PROFILE.pid;
-  /* если мы создали и там нет нас — добавляемся */
   if(!(joined.players||[]).some(p=>p.pid===PROFILE.pid)){
    const ps=(joined.players||[]).concat([{pid:PROFILE.pid,name:myName(),hero:HERO,ready:true}]);
    await SB.from('eho_matches').update({players:ps,updated_at:new Date().toISOString()}).eq('id',joined.id);
@@ -258,27 +251,25 @@ async function lobbyTick(){
   }
   MM.players=joined.players||[];
   updateLobbyUI(joined);
-  /* подписка на канал матча */
   if(!MM.ch){
    MM.ch=SB.channel('match:'+MM.matchId,{config:{broadcast:{self:false}}});
    MM.ch.on('broadcast',{event:'start'},msg=>{
     if(!MM.started&&msg.payload&&msg.payload.seed!==undefined)beginNetworkMatch(msg.payload);
    }).subscribe();
   }
-  /* хост решает: старт? */
   const need=MODES[MM.mode].cap;
   const aliveSec=(Date.now()-new Date(joined.created_at).getTime())/1000;
   if(MM.isHost&&(MM.players.length>=need||(aliveSec>45&&MM.players.length>=2))){
    MM.started=true;
-   /* строим команды: дуо — пары, отряды — четвёрки, одиночный — каждый сам */
    const teamSize=MODES[MM.mode].teamSize;
    const shuffled=MM.players.slice().sort(()=>Math.random()-0.5);
    const withTeams=shuffled.map((p,i)=>Object.assign(p,{team:Math.floor(i/teamSize)}));
-   /* добиваем ботами */
    const missing=need-shuffled.length;
    const bots=[];for(let i=0;i<missing;i++)bots.push({pid:'bot_'+(MM.matchId||'x').slice(0,6)+'_'+i,name:'Бот '+ri(10,99),hero:HEROES[ri(0,5)].k,team:Math.floor((shuffled.length+i)/teamSize),bot:true});
-   await SB.from('eho_matches').update({status:'playing',players:withTeams.concat(bots),updated_at:new Date().toISOString()}).eq('id',MM.matchId);
-   beginNetworkMatch({matchId:MM.matchId,players:withTeams.concat(bots),mode:MM.mode,seed:Date.now()});
+   const finalRoster=withTeams.concat(bots);
+   await SB.from('eho_matches').update({status:'playing',players:finalRoster,updated_at:new Date().toISOString()}).eq('id',MM.matchId);
+   if(MM.ch)MM.ch.send({type:'broadcast',event:'start',payload:{matchId:MM.matchId,players:finalRoster,mode:MM.mode,seed:Date.now(),hostSim:false}});
+   beginNetworkMatch({matchId:MM.matchId,players:finalRoster,mode:MM.mode,seed:Date.now(),hostSim:true});
   }else{
    const to=setTimeout(lobbyTick,2000);MM.pollTimer=to;
   }
@@ -316,16 +307,10 @@ $('bPlay').onclick=()=>{
  saveProfile();
  openLobbySearch();
 };
-$('bAgain').onclick=()=>{showScr(null);openLobbySearch();};
-$('bMenu').onclick=()=>{showScr('scrMenu');};
 
-/* Старты определены в частях 2–3 */
-  /* ============================================================
+/* ============================================================
    ЭХО АРЕНЫ · ЧАСТЬ 2: боевой движок
-   Мир, оружие героев, умения, лут, Вихрь, нокдауны, Эхо павшего
    ============================================================ */
-
-/* ---------- звук ---------- */
 let ACX=null;
 function sfx(fr,du,ty,vo){
  try{
@@ -339,12 +324,12 @@ function sfx(fr,du,ty,vo){
  }catch(e){}
 }
 
-/* ---------- константы и состояние ---------- */
 const WORLD=1600,HEART_R=135;
 const HERO_MAP={};HEROES.forEach(h=>HERO_MAP[h.k]=h);
 const SPD_H={klyk:168,mira:168,askold:152,yula:192,groza:158,noktis:186};
 const TEAM_COL=['#2ee38b','#ff6b6b','#59a6ff','#ffd86b'];
 
+/* lastTs объявлен здесь ОДИН раз (правка: дубль из части 4 удалён) */
 let ST='idle',over=false,tGame=0,lastTs=0;
 let fighters=[],bullets=[],shards=[],orbs=[],crystals=[],crates2=[],zones=[],fx=[],events=[];
 let obstacles=[];
@@ -358,10 +343,8 @@ let elimArr=[],teamElim=[];
 let GHOST=null;
 let hudDirty=false;
 
-/* Ввод локального игрока — заполняет часть 4, читает движок */
 const IN={mx:0,my:0,aim:null,fire:false,abTap:false,ultTap:false,rev:false};
 
-/* ---------- геометрия ---------- */
 function hitObs(x,y,r){
  for(const o of obstacles){
   if(o.t==='tree'||o.t==='fount'){if(Math.hypot(x-o.x,y-o.y)<o.r+r)return true;}
@@ -390,8 +373,6 @@ function collideFighter(f){
   }
  }
 }
-
-/* ---------- генерация «Свердлов-Парка» ---------- */
 function genWorld(){
  obstacles=[{t:'fount',x:800,y:800,r:92}];
  for(let i=0;i<46;i++){
@@ -413,8 +394,6 @@ function genWorld(){
   crystals.push({x:x,y:y,hp:70,max:70,dead:false});
  }
 }
-
-/* ---------- бойцы ---------- */
 function rosterToFighter(p,idx){
  const h=HERO_MAP[p.hero]||HERO_MAP.klyk;
  return{pid:p.pid||('b'+idx),name:p.name||'Боец',hero:h.k,
@@ -454,8 +433,6 @@ function startMatchState(roster,mode){
  });
  updAlive();
 }
-
-/* ---------- стрельба: у каждого героя своё оружие ---------- */
 function fireWeapon(f,ang){
  const w=HERO_MAP[f.hero].wpn;
  if(f.fireT>0||f.down||!f.alive)return;
@@ -500,8 +477,6 @@ function smashCrystalsMelee(f,ang){
   if(Math.abs(da)<1.2){c.hp-=34;if(c.hp<=0)shatterCrystal(c,f);}
  }
 }
-
-/* ---------- умения ---------- */
 function useAbility(f,inp){
  if(!f.alive||f.abCd>0||f.down)return;
  const m=f.reson?0.5:1,k=f.hero;
@@ -535,8 +510,6 @@ function useAbility(f,inp){
   sfx(90,0.4,'sine',0.05);
  }
 }
-
-/* ---------- ульты ---------- */
 function useUlt(f){
  if(!f.alive||f.down||f.ult<100)return;
  f.ult=0;const k=f.hero;
@@ -561,8 +534,6 @@ function useUlt(f){
   sfx(70,0.6,'sine',0.07);
  }
 }
-
-/* ---------- урон, нокдауны, смерть ---------- */
 function damage(t,d,att){
  if(!t.alive||t.invulT>0)return;
  if(t.down)d*=1.5;
@@ -602,8 +573,6 @@ function dropLoot(t){
  orbs.push({x:t.x+rnd(-24,24),y:t.y+rnd(-24,24),kind:'hp',v:40});
  if(Math.random()<0.6)orbs.push({x:t.x+rnd(-24,24),y:t.y+rnd(-24,24),kind:'sh',v:60});
 }
-
-/* ---------- Эхо павшего: дух ---------- */
 function enterGhost(t){
  GHOST={x:t.x,y:t.y,pulseCd:0,team:t.team};
  toast('✨ Эхо павшего: ты дух. 💨 — резонансный импульс для союзников');
@@ -623,8 +592,6 @@ function ghostPulse(){
  zones.push({type:'pulse',x:GHOST.x,y:GHOST.y,r:200,dur:8,team:GHOST.team});
  sfx(660,0.4,'sine',0.06);
 }
-
-/* ---------- лут: кристаллы, осколки, орбы, посылки ---------- */
 function shatterCrystal(c,att){
  c.dead=true;
  const n=4+ri(0,3);
@@ -690,8 +657,6 @@ function updShards(dt){
   if(s.t>25)shards.splice(i,1);
  }
 }
-
-/* ---------- зоны: лечение, дым, поле жизни, импульс ---------- */
 function updZones(dt){
  for(const f of fighters)f.inSmoke=false;
  for(let i=zones.length-1;i>=0;i--){
@@ -710,8 +675,6 @@ function updZones(dt){
   if(z.dur<=0)zones.splice(i,1);
  }
 }
-
-/* ---------- Сердце Вихря и шторм ---------- */
 function updHeart(dt){
  let best=null,bd=1e9;
  for(const f of fighters){
@@ -757,8 +720,6 @@ function updStorm(dt){
   }
  }
 }
-
-/* ---------- пули ---------- */
 function updBullets(dt){
  for(let i=bullets.length-1;i>=0;i--){
   const b=bullets[i];
@@ -793,8 +754,6 @@ function updBullets(dt){
   if(dead)bullets.splice(i,1);
  }
 }
-
-/* ---------- симуляция шага ---------- */
 function updFighterSim(f,inp,dt){
  if(!f.alive)return;
  f.fireT=Math.max(0,f.fireT-dt*1000);
@@ -844,37 +803,6 @@ function updFighterSim(f,inp,dt){
  }
  pickNearby(f);
 }
-function simStep(dt){
- tGame+=dt;
- for(const f of fighters){
-  if(!f.alive)continue;
-  let inp;
-  if(f.isPlayer){
-   inp={mx:IN.mx,my:IN.my,aim:IN.aim,fire:IN.fire,rev:IN.rev};
-   if(IN.abTap){useAbility(f,IN);IN.abTap=false;}
-   if(IN.ultTap){useUlt(f);IN.ultTap=false;}
-  }else if(f.ai){inp=f.ai(dt);}
-  else inp={mx:0,my:0,aim:null,fire:false,rev:false};
-  updFighterSim(f,inp,dt);
- }
- if(GHOST){
-  updGhost(dt);
-  if(IN.abTap){ghostPulse();IN.abTap=false;}
- }
- for(const f of fighters){
-  if(f.down){f.downT-=dt;
-   if(f.downT<=0)finalKill(f,fighters[ME]&&fighters[ME].team!==f.team?fighters[ME]:null);}
- }
- updBullets(dt);
- updShards(dt);
- updZones(dt);
- updAirdrops(dt);
- updHeart(dt);
- updStorm(dt);
- checkEnd();
-}
-
-/* ---------- конец матча ---------- */
 function checkEnd(){
  if(over||ST!=='play')return;
  const tSet={};
@@ -883,9 +811,11 @@ function checkEnd(){
   if(!f.alive&&!(f.team in tSet)&&teamElim.indexOf(f.team)<0)teamElim.push(f.team);
  if(Object.keys(tSet).length<=1)finishMatch();
 }
-function finishMatch(res){
+async function finishMatch(res){
  if(over)return;
  over=true;ST='end';
+ clearInterval(NET.inTimer);
+ if(!isTrain&&MM.matchId){try{await SB.from('eho_matches').update({status:'done'}).eq('id',MM.matchId);}catch(e){}}
  const me=fighters[ME];
  let place=1,tpos=1,winner=null;
  if(res){place=res.place;tpos=res.teamPlace;winner=res.winner;}
@@ -916,28 +846,24 @@ function finishMatch(res){
  renderProfile();
  sfx(p===1?880:300,0.5,p===1?'sine':'square',0.06);
 }
+
 /* ============================================================
    ЭХО АРЕНЫ · ЧАСТЬ 3: ИИ ботов и сетевая синхронизация
    ============================================================ */
-
-/* ---------- ИИ ботов ---------- */
 function botAI(f){
  let wt=0;
  return function(dt){
   wt-=dt;
   const inp={mx:0,my:0,aim:f.ang,fire:false,rev:false};
-  /* приоритет 1: подняться нельзя сам — ждём; держимся от края */
   const dStorm=dist(f.x,f.y,storm.x,storm.y);
   if(dStorm>storm.r-70){
    const d=Math.max(1,dStorm);
    inp.mx=(storm.x-f.x)/d;inp.my=(storm.y-f.y)/d;
    f.aiT=0;return inp;
   }
-  /* приоритет 2: собрать осколки и орбы рядом */
   let near=null,nd=1e9;
   for(const s of shards){const d=dist(f.x,f.y,s.x,s.y);if(d<nd&&d<150){nd=d;near=s;}}
   if(near){const d=Math.max(1,nd);inp.mx=(near.x-f.x)/d;inp.my=(near.y-f.y)/d;}
-  /* приоритет 3: бой */
   const w=HERO_MAP[f.hero].wpn;
   const rng=w.melee?90:w.rng*0.9;
   const t=(f.aiTgt&&f.aiTgt.alive&&dist(f.x,f.y,f.aiTgt.x,f.aiTgt.y)<rng*1.25&&los(f.x,f.y,f.aiTgt.x,f.aiTgt.y))
@@ -957,17 +883,15 @@ function botAI(f){
     else{const s2=Math.sin(tGame*2.2+(f.aiSeed||0))*0.85;inp.mx=-ay*s2;inp.my=ax*s2;}
     if(d<w.rng*0.95)inp.fire=true;
    }
-   /* способности по ситуции */
    if(f.abCd<=0&&d<rng*0.8&&Math.random()<dt*2.2){
     const k=f.hero;
-    if(k==='klyk'||k==='yula'){INBOT(f,inp);}
+    if(k==='klyk'||k==='yula')INBOT(f,inp);
     else if(k==='mira'&&f.hp<60)INBOT(f,inp);
     else if(k==='askold'&&f.hp<70)INBOT(f,inp);
     else if(k==='noktis'||k==='groza')INBOT(f,inp);
    }
    if(f.ult>=100&&(f.hp<45||d<rng*0.5)&&Math.random()<dt*1.5)useUlt(f);
   }else if(!near){
-   /* патруль внутрь круга */
    if(wt<=0){
     wt=rnd(2,4.5);
     const a=rnd(0,TAU),dd=rnd(0,Math.max(80,storm.r*0.72));
@@ -977,7 +901,6 @@ function botAI(f){
    const d=dist(f.x,f.y,f.aiTx||800,f.aiTy||800);
    if(d>24){inp.mx=(f.aiTx-f.x)/d;inp.my=(f.aiTy-f.y)/d;}
   }
-  /* поднимать напарников */
   if(teamSize>1&&Math.random()<dt*0.8){
    for(const b of fighters){
     if(b.team===f.team&&b.down&&dist(f.x,f.y,b.x,b.y)<60){inp.rev=true;break;}
@@ -987,7 +910,6 @@ function botAI(f){
  };
 }
 function INBOT(f,inp){
- /* запуск умения для бота: направляем по цели */
  const saveMx=inp.mx,saveMy=inp.my;
  inp.mx=0;inp.my=0;
  useAbility(f,inp);
@@ -1002,8 +924,6 @@ function nearestEnemy(f,rng){
  }
  return best;
 }
-
-/* ---------- Тренировка (оффлайн) ---------- */
 function startTraining(){
  MM.started=true;
  const roster=[{pid:PROFILE.pid,name:myName(),hero:HERO,team:0}];
@@ -1018,27 +938,19 @@ function startTraining(){
  showGame();
  toast('🎯 Тренировка: 11 ботов, живой парк — пробуй героя!');
 }
-
-/* ---------- Сетевой матч ---------- */
-const NET={lastSnap:0,inTimer:null,snapQueue:null};
+const NET={lastSnap:0,inTimer:null};
 function beginNetworkMatch(payload){
  MM.started=true;
  const roster=(payload.players||[]);
  startMatchState(roster,payload.mode);
- /* ботов в ростере (если хост добивал) превращаем в ИИ */
- const botsIn=roster.filter(p=>p.bot);
- const isHostSim=(payload.hostSim!==false);
- amHost=isHostSim;
+ amHost=(payload.hostSim!==false);
  fighters.forEach(f=>{
   if(f.isBot){f.ai=botAI(f);f.aiSeed=rnd(0,TAU);}
  });
  showGame();
- if(isHostSim){
-  /* Я хост: симулирую и рассылаю */
-  NET.inTimer=setInterval(collectInputs,60);
+ if(amHost){
   toast('👑 Ты хост матча — веди бой!');
  }else{
-  /* Я клиент: шлю инпуты, применяю снимки */
   NET.inTimer=setInterval(sendInput,60);
   toast('🔗 Соединение с ареной…');
  }
@@ -1053,11 +965,8 @@ function hideGame(){
  $('cv').style.display='none';
  $('hud').style.display='none';
 }
-
-/* --- клиент: отправка инпута --- */
 function sendInput(){
  if(!SB||!MM.matchId||over)return;
- const me=fighters[ME];
  const extra={};
  if(IN.abTap){extra.ab=1;IN.abTap=false;}
  if(IN.ultTap){extra.ul=1;IN.ultTap=false;}
@@ -1070,7 +979,6 @@ function sendInput(){
   },extra)
  });
 }
-/* --- клиент: применение снимка (сглаживание) --- */
 function applySnapshot(s){
  if(over)return;
  for(const r of s.f){
@@ -1078,10 +986,8 @@ function applySnapshot(s){
   if(!f)continue;
   f.netX=r[1];f.netY=r[2];f.netA=r[3];
   f.hp=r[4];f.shield=r[5];f.power=r[6];
-  if(!r[7]&&f.alive&&!f.down){/* стал мёртв */}
   f.alive=r[7]>0;f.down=r[8]>0;
-  if(r[7]<0&&f.alive)finalKillVisual(f);
-  if(f.isPlayer){hudDirty=true;}
+  if(f.isPlayer)hudDirty=true;
  }
  bullets=s.b.map(b=>({x:b[0],y:b[1],color:b[2]}));
  shards=s.sh.map(p=>({x:p[0],y:p[1],t:1}));
@@ -1092,13 +998,6 @@ function applySnapshot(s){
  aliveN=s.an;heart.prog=s.h[0];
  events=s.ev.map(e=>({x:e[0],y:e[1],t:tGame,big:e[2]>0}));
  if(s.end&&!over){over=true;ST='end';clearInterval(NET.inTimer);finishMatch(s.end);}
-}
-function finalKillVisual(f){f.alive=false;f.down=false;sfx(120,0.25,'sawtooth',0.04);}
-
-/* --- хост: приём инпутов --- */
-function collectInputs(){
- if(!MM.ch)return;
- /* отправка снимка handled in loop; здесь только приём через on() ниже */
 }
 function hostHandleInput(p){
  if(!p||!p.pid)return;
@@ -1119,8 +1018,7 @@ function hostSendSnapshot(){
   f.alive?1:0,f.down?1:0
  ]);
  const bPack=bullets.slice(0,40).map(b=>[
-  Math.round(b.x),Math.round(b.y),
-  (b.color||'#ffe9a8')
+  Math.round(b.x),Math.round(b.y),(b.color||'#ffe9a8')
  ]);
  const shPack=shards.slice(0,30).map(s=>[Math.round(s.x),Math.round(s.y)]);
  const orPack=orbs.slice(0,20).map(o=>[Math.round(o.x),Math.round(o.y),o.kind]);
@@ -1134,61 +1032,9 @@ function hostSendSnapshot(){
  }});
 }
 
-/* --- главный сетевой цикл ---
-   вызывается из render-лупа части 4: netStep(dt) */
-function netStep(dt){
- if(ST!=='play'||over)return;
- if(amHost||isTrain){
-  /* локальная симуляция */
-  for(const f of fighters){
-   if(!f.alive)continue;
-   if(f.isPlayer){
-    if(f.abTapReq){useAbility(f,IN);f.abTapReq=false;IN.abTap=false;}
-    if(f.ultTapReq){useUlt(f);f.ultTapReq=false;IN.ultTap=false;}
-    updFighterSim(f,{mx:IN.mx,my:IN.my,aim:IN.aim,fire:IN.fire,rev:IN.rev},dt);
-   }else if(f.ai){
-    const inp=f.ai(dt);
-    updFighterSim(f,inp,dt);
-   }
-  }
-  if(GHOST){
-   updGhost(dt);
-   if(IN.abTap){ghostPulse();IN.abTap=false;}
-  }
-  for(const f of fighters){
-   if(f.down){f.downT-=dt;
-    if(f.downT<=0)finalKill(f,null);}
-  }
-  updBullets(dt);updShards(dt);updZones(dt);updAirdrops(dt);updHeart(dt);updStorm(dt);
-  checkEnd();
-  if(!isTrain)hostSendSnapshot();
- }else{
-  /* клиент: интерполяция к сетевым целям */
-  for(const f of fighters){
-   if(f.netX===undefined)continue;
-   const k=Math.min(1,dt*14);
-   f.x+=(f.netX-f.x)*k;f.y+=(f.netY-f.y)*k;
-   if(f.netA!==undefined)f.ang=f.netA;
-  }
-  /* дух на клиенте двигается локально */
-  if(GHOST&&!fighters[ME].alive)updGhost(dt);
-  /* предсказание своего движения (лёгкое) */
-  const me=fighters[ME];
-  if(me&&me.alive&&!me.down){
-   const mv=Math.hypot(IN.mx,IN.my);
-   if(mv>0.05){
-    const nx=IN.mx/Math.max(1,mv),ny=IN.my/Math.max(1,mv);
-    me.x=clamp(me.x+nx*me.speed*dt,26,WORLD-26);
-    me.y=clamp(me.y+ny*me.speed*dt,26,WORLD-26);
-   }
-  }
- }
-}
 /* ============================================================
    ЭХО АРЕНЫ · ЧАСТЬ 4: рендер, HUD, ввод, цикл
    ============================================================ */
-
-/* ---------- размер холста ---------- */
 const cv=$('cv'),ctx=cv.getContext('2d');
 let VW=0,VH=0,DPR=1;
 function resize(){
@@ -1199,7 +1045,6 @@ function resize(){
 }
 addEventListener('resize',resize);
 
-/* ---------- трава-тайл ---------- */
 const grassTile=document.createElement('canvas');
 grassTile.width=grassTile.height=160;
 (function(){
@@ -1210,7 +1055,6 @@ grassTile.width=grassTile.height=160;
  for(let i=0;i<26;i++){g.strokeStyle='rgba(20,60,25,.25)';const x=rn()*160,y=rn()*160;g.beginPath();g.moveTo(x,y);g.lineTo(x+rn()*6-3,y-6);g.stroke();}
 })();
 
-/* ---------- ввод: джойстики ---------- */
 function bindJoy(el,knob){
  let jid=null,cx=0,cy=0;
  const R=46;
@@ -1242,7 +1086,6 @@ function bindJoy(el,knob){
 bindJoy($('joyL'),$('knobL'));
 bindJoy($('joyR'),$('knobR'));
 
-/* кнопки тач/мышь */
 function bindBtn(id,down,up){
  const el=$(id);
  el.addEventListener('touchstart',e=>{e.preventDefault();down();},{passive:false});
@@ -1256,7 +1099,6 @@ bindBtn('bUlt',()=>{IN.ultTap=true;});
 bindBtn('bFire',()=>{IN.fire=true;},()=>{IN.fire=false;});
 bindBtn('bRevive',()=>{IN.rev=true;},()=>{IN.rev=false;});
 
-/* клавиатура и мышь (ПК) */
 const keys={};
 addEventListener('keydown',e=>{keys[e.code]=true;
  if(e.code==='Space'){IN.abTap=true;e.preventDefault();}
@@ -1275,25 +1117,20 @@ function readDesktopInput(){
  if(keys.KeyS||keys.ArrowDown)my+=1;
  if(keys.KeyA||keys.ArrowLeft)mx-=1;
  if(keys.KeyD||keys.ArrowRight)mx+=1;
- if(mx||my){IN.mx=mx;IN.my=my;}
- else if(JoyWasActive)/* тач активен — не трогаем */;
- else{IN.mx=0;IN.my=0;}
+ IN.mx=mx;IN.my=my;
  const me=fighters[ME];
  if(me){
-  const sx=(me.x-cam.x+VW/2)*1,sy=(me.y-cam.y+VH/2)*1;
+  const sx=me.x-cam.x+VW/2,sy=me.y-cam.y+VH/2;
   if(Math.hypot(mouse.x-sx,mouse.y-sy)>4)IN.aim=Math.atan2(mouse.y-sy,mouse.x-sx);
  }
 }
-let JoyWasActive=false;
-
-/* автоприцел для кнопки 🎯 */
 function assistAim(f){
  if(IN.aim!==null&&IN.aim!==undefined)return;
  const t=nearestEnemy(f,700);
  if(t)f.ang=Math.atan2(t.y-f.y,t.x-f.x);
 }
 
-/* ---------- сеть: обработчики канала ---------- */
+/* сеть: обработчики канала */
 function attachNetHandlers(){
  if(!SB||!MM.matchId)return;
  if(MM.ch){try{SB.removeChannel(MM.ch);}catch(e){}}
@@ -1305,7 +1142,7 @@ function attachNetHandlers(){
 const _origBNM=beginNetworkMatch;
 beginNetworkMatch=function(payload){_origBNM(payload);attachNetHandlers();};
 
-/* ---------- netStep v2: с поддержкой инпутов удалённых игроков ---------- */
+/* главный сетевой цикл */
 function netStep(dt){
  if(ST!=='play'||over)return;
  if(amHost||isTrain){
@@ -1356,7 +1193,7 @@ function netStep(dt){
  }
 }
 
-/* ---------- HUD ---------- */
+/* HUD */
 function fmtTime(s){s=Math.max(0,Math.floor(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
 function updHUD(){
  const me=fighters[ME];
@@ -1371,7 +1208,6 @@ function updHUD(){
  $('topMid').textContent=me.down
   ?'⏳ Ждём напарника: '+Math.ceil(me.downT)+' сек'
   :('👥 '+aliveN+(teamSize>1?' ('+tl+' отр.)':'')+' · 🌀 '+fmtTime(240-tGame)+' · ☠ '+me.kills);
- /* revive-кнопка */
  let show=false,label='🤝 Поднять напарника (держи)',active=true;
  if(me.down){show=true;label='⏳ Ждём напарника…';active=false;}
  else if(teamSize>1&&me.alive){
@@ -1387,7 +1223,7 @@ function updHUD(){
  if(show){$('bRevive').textContent=label;$('bRevive').style.opacity=active?1:.5;}
 }
 
-/* ---------- рендер ---------- */
+/* рендер */
 function rr(c,x,y,w,h,r){
  c.beginPath();c.moveTo(x+r,y);
  c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);
@@ -1404,13 +1240,10 @@ function render(dt){
  cam.y+=(focus.y-cam.y)*Math.min(1,dt*6);
  const camX=cam.x-VW/2,camY=cam.y-VH/2;
  ctx.save();ctx.translate(-camX,-camY);
- /* земля */
  ctx.fillStyle=ctx.createPattern(grassTile,'repeat');
  ctx.fillRect(camX-10,camY-10,VW+20,VH+20);
- /* аллеи */
  ctx.fillStyle='rgba(210,190,150,.5)';
  ctx.fillRect(0,778,WORLD,44);ctx.fillRect(778,0,44,WORLD);
- /* фонтан */
  ctx.fillStyle='rgba(0,0,0,.2)';ctx.beginPath();ctx.arc(805,807,95,0,TAU);ctx.fill();
  ctx.fillStyle='#8a9bb0';ctx.beginPath();ctx.arc(800,800,95,0,TAU);ctx.fill();
  ctx.fillStyle='#3f7fd9';ctx.beginPath();ctx.arc(800,800,74,0,TAU);ctx.fill();
@@ -1419,7 +1252,6 @@ function render(dt){
   ctx.strokeStyle='rgba(255,255,255,'+(0.35*(1-rp/86)).toFixed(2)+')';
   ctx.lineWidth=2;ctx.beginPath();ctx.arc(800,800,14+rp*0.8,0,TAU);ctx.stroke();
  }
- /* Сердце Вихря */
  const hp=1+Math.sin(tGame*3)*0.12;
  ctx.save();ctx.translate(800,800);ctx.scale(hp,hp);
  ctx.fillStyle='rgba(180,90,255,.35)';ctx.beginPath();ctx.arc(0,0,26,0,TAU);ctx.fill();
@@ -1428,7 +1260,6 @@ function render(dt){
  ctx.fillStyle='rgba(255,255,255,.55)';
  ctx.beginPath();ctx.moveTo(0,-20);ctx.lineTo(14,0);ctx.lineTo(0,4);ctx.closePath();ctx.fill();
  ctx.restore();
- /* препятствия */
  for(const o of obstacles){
   if(o.t==='tree'){
    ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.arc(o.x+4,o.y+6,o.r,0,TAU);ctx.fill();
@@ -1443,7 +1274,6 @@ function render(dt){
    ctx.fillStyle='#8a5a2b';rr(ctx,o.x,o.y,o.w,o.h,6);
   }
  }
- /* кристаллы */
  for(const c of crystals){
   if(c.dead)continue;
   const p=1+Math.sin(tGame*4+c.x)*0.05;
@@ -1457,18 +1287,15 @@ function render(dt){
   ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(c.x-20,c.y-38,40,5);
   ctx.fillStyle='#c07bff';ctx.fillRect(c.x-20,c.y-38,40*clamp(c.hp/c.max,0,1),5);
  }
- /* осколки */
  for(const s of shards){
   ctx.fillStyle='#c07bff';ctx.beginPath();ctx.arc(s.x,s.y,5,0,TAU);ctx.fill();
   ctx.fillStyle='rgba(200,150,255,.4)';ctx.beginPath();ctx.arc(s.x,s.y,9,0,TAU);ctx.fill();
  }
- /* орбы */
  for(const o of orbs){
   ctx.fillStyle=o.kind==='hp'?'#e05a5a':o.kind==='sh'?'#59a6ff':'#ffd86b';
   ctx.beginPath();ctx.arc(o.x,o.y,8,0,TAU);ctx.fill();
   ctx.fillStyle='rgba(255,255,255,.35)';ctx.beginPath();ctx.arc(o.x-2,o.y-2,3,0,TAU);ctx.fill();
  }
- /* посылки */
  for(const c of crates2){
   if(c.fall>0){
    ctx.fillStyle='rgba(255,220,100,.25)';
@@ -1485,7 +1312,6 @@ function render(dt){
    ctx.restore();
   }
  }
- /* зоны */
  for(const z of zones){
   if(z.type==='heal'){ctx.fillStyle='rgba(110,230,150,.18)';ctx.beginPath();ctx.arc(z.x,z.y,z.r,0,TAU);ctx.fill();}
   else if(z.type==='smoke'){ctx.fillStyle='rgba(60,60,70,.5)';ctx.beginPath();ctx.arc(z.x,z.y,z.r,0,TAU);ctx.fill();}
@@ -1496,7 +1322,6 @@ function render(dt){
    ctx.beginPath();ctx.arc(z.x,z.y,z.r*(0.7+a*0.3),0,TAU);ctx.stroke();
   }
  }
- /* вспышки событий */
  for(const e of events){
   const a=1-(tGame-e.t)/0.9;
   if(a<=0)continue;
@@ -1505,20 +1330,17 @@ function render(dt){
   ctx.lineWidth=e.big?4:2;
   ctx.beginPath();ctx.arc(e.x,e.y,r0+(1-a)*50,0,TAU);ctx.stroke();
  }
- /* пули */
  for(const b of bullets){
   ctx.fillStyle=b.color||'#ffe9a8';
   ctx.beginPath();ctx.arc(b.x,b.y,4,0,TAU);ctx.fill();
   ctx.fillStyle='rgba(255,255,255,.4)';ctx.beginPath();ctx.arc(b.x-1,b.y-1,1.6,0,TAU);ctx.fill();
  }
- /* бойцы */
  for(const f of fighters){
   if(!f.alive||f.isPlayer)continue;
-  if(f.invisT>0)continue; /* невидимых врагов не видно */
+  if(f.invisT>0)continue;
   drawFighter(f);
  }
  if(me.alive)drawFighter(me);
- /* дух */
  if(GHOST&&!me.alive){
   ctx.save();ctx.translate(GHOST.x,GHOST.y);
   ctx.globalAlpha=0.55;
@@ -1530,7 +1352,6 @@ function render(dt){
   ctx.fillText('дух',0,-24);
   ctx.restore();
  }
- /* вихрь */
  ctx.fillStyle='rgba(110,30,160,0.42)';
  ctx.beginPath();
  ctx.rect(camX-10,camY-10,VW+20,VH+20);
@@ -1541,7 +1362,6 @@ function render(dt){
  ctx.beginPath();ctx.arc(storm.x,storm.y,storm.r,0,TAU);ctx.stroke();
  ctx.setLineDash([]);
  ctx.restore();
- /* виньетка */
  const g=ctx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.42,VW/2,VH/2,Math.max(VW,VH)*0.75);
  g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,10,.5)');
  ctx.fillStyle=g;ctx.fillRect(0,0,VW,VH);
@@ -1603,20 +1423,14 @@ function drawMini(){
  }
 }
 
-/* ---------- кнопки экрана итогов: поправка ---------- */
+/* кнопки экрана итогов */
 $('bAgain').onclick=()=>{hideGame();showScr(null);openLobbySearch();};
 $('bMenu').onclick=()=>{
  hideGame();ST='idle';over=false;GHOST=null;
  showScr('scrMenu');renderProfile();
 };
-const _origStart=startMatchState;
-startMatchState=function(roster,mode){
- _origStart(roster,mode);
- $('wTag').textContent=HERO_MAP[HERO_MAP[fighters[ME]?fighters[ME].hero:HERO].k].wpn.n;
-};
 
-/* ---------- главный цикл ---------- */
-let lastTs=0;
+/* главный цикл (lastTs объявлен один раз в части 2) */
 function loop(ts){
  requestAnimationFrame(loop);
  const dt=Math.min(0.05,(ts-lastTs)/1000||0);lastTs=ts;
