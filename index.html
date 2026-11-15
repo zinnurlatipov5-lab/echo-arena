@@ -94,7 +94,7 @@ html,body{height:100%;overflow:hidden;background:#0b0f22;font-family:'Segoe UI',
  <div class="topbar">
   <div class="pinfo" id="pinfo">
    <div class="pav" id="pav">🔥</div>
-   <div><div class="pnm" id="pnm">Боец</div><div class="plg" id="plg">🥉 Медь</div></div>
+   <div><div class="pnm" id="pnm">Боец</div><div class="plg" id="plg">🥉 Медия</div></div>
   </div>
   <div class="pcur">🏆 <span id="curT">0</span></div>
  </div>
@@ -221,8 +221,11 @@ let PROFILE={name:'',trophies:0,wins:0,matches:0};
 try{PROFILE=Object.assign(PROFILE,JSON.parse(localStorage.getItem('eho_profile')||'{}'));}catch(e){}
 function saveProfile(){localStorage.setItem('eho_profile',JSON.stringify(PROFILE));}
 const ligaOf=t=>t<50?'🥉 Медь':t<120?'🥈 Бронза':t<250?'🥇 Серебро':t<500?'🏆 Золото':t<900?'💠 Платина':t<1500?'💎 Алмаз':'👑 Легенда';
-function renderProfile(){$('profStat').textContent='🏆 '+PROFILE.trophies+' · '+ligaOf(PROFILE.trophies);}
-renderProfile();
+/* безопасная заготовка renderProfile: настоящая версия объявлена ниже, после лобби */
+function renderProfile(){
+ const el=$('profStat');
+ if(el)el.textContent='🏆 '+PROFILE.trophies+' · '+ligaOf(PROFILE.trophies);
+}
 
 function showScr(id){
  ['scrMenu','scrLobby','scrEnd'].forEach(s=>$(s).classList.remove('show'));
@@ -231,20 +234,7 @@ function showScr(id){
 let heroUnlocked={klyk:true,mira:true,askold:true,yula:true,groza:true,noktis:true};
 try{heroUnlocked=Object.assign(heroUnlocked,JSON.parse(localStorage.getItem('eho_heroes')||'{}'));}catch(e){}
 function saveHeroes(){localStorage.setItem('eho_heroes',JSON.stringify(heroUnlocked));}
-function renderHeroes(){
- $('heroGrid').innerHTML=HEROES.map(h=>
-  '<div class="heroB'+(h.k===HERO?' on':'')+(heroUnlocked[h.k]?'':' lock')+'" data-k="'+h.k+'">'+
-  '<div class="av" style="--g1:'+h.g1+';--g2:'+h.g2+';--gl:'+h.gl+'">'+h.ic+'</div>'+
-  '<div class="nm">'+h.n+'</div><div class="wp">'+h.wpn.n+'</div></div>').join('');
- const h=HEROES.find(x=>x.k===HERO);
- $('heroInfo').innerHTML='<b>'+h.n+'</b> ('+h.r+') · '+h.wpn.n+'<br>Умение: '+h.ab.n+' · Ульта: '+h.ult.n+' — '+h.ult.d;
- document.querySelectorAll('.heroB').forEach(b=>b.onclick=()=>{
-  const k=b.dataset.k;
-  if(!heroUnlocked[k]){toast('🔒 Герой ещё закрыт');return;}
-  HERO=k;renderHeroes();
- });
-}
-renderHeroes();
+
 document.querySelectorAll('.modeB').forEach(b=>b.onclick=()=>{
  MODE=b.dataset.mode;
  document.querySelectorAll('.modeB').forEach(x=>x.classList.toggle('on',x===b));
@@ -349,7 +339,7 @@ $('bPlay').onclick=()=>{
  PROFILE.pid=PROFILE.pid||('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
  if(!PROFILE.name){
   const v=prompt('Твой позывной (до 12 символов):','');
-  PROFILE.name=(v||'Боец').slice(0,12);
+  PROFILE.name=(v||'Боец').trim().slice(0,12)||'Боец';
   saveProfile();renderProfile();
  }
  openLobbySearch();
@@ -372,7 +362,6 @@ function renderShowcase(){
  $('bigwp').innerHTML=h.wpn.n+'<br><span style="opacity:.8">Умение: '+h.ab.n+' · Ульта: '+h.ult.n+'</span>';
 }
 
-/* новая версия сетки героев — с плашкой редкости */
 function renderHeroes(){
  $('heroGrid').innerHTML=HEROES.map(h=>{
   const rr=RARITY[h.k];
@@ -389,8 +378,6 @@ function renderHeroes(){
   HERO=k;renderHeroes();renderShowcase();
  });
 }
-renderHeroes();
-renderShowcase();
 
 /* вкладки */
 document.querySelectorAll('.tabB').forEach(b=>b.onclick=()=>{
@@ -406,13 +393,16 @@ $('pinfo').onclick=()=>{
  saveProfile();renderProfile();
 };
 
-/* новая версия renderProfile: карточка игрока в топбаре */
-function renderProfile(){
+/* настоящая версия renderProfile: карточка игрока в топбаре */
+renderProfile=function(){
  $('curT').textContent=PROFILE.trophies;
  $('pnm').textContent=PROFILE.name||'Боец';
  $('plg').textContent=ligaOf(PROFILE.trophies);
  $('pav').textContent=HERO_MAP[HERO].ic;
-}
+};
+HERO_MAP.klyk=HEROES[0];
+renderHeroes();
+renderShowcase();
 renderProfile();
 
 /* ============================================================
