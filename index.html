@@ -1129,16 +1129,14 @@ function collideFighter(f){
    const dx=f.x-o.x,dy=f.y-o.y,d=Math.hypot(dx,dy),m=o.r+f.r;
    if(d<m&&d>0.01){f.x=o.x+dx/d*m;f.y=o.y+dy/d*m;}
   }else{
-   const cx=clamp(f.x,o.x,o.x+o.w),cy=clamp(y_f(o.y)),cy2=clamp(f.y,o.y,o.y+o.h);
-   const dx=f.x-cx,dy=f.y-cy2,d=Math.hypot(dx,dy);
+   const cx=clamp(f.x,o.x,o.x+o.w),cy=clamp(f.y,o.y,o.y+o.h);
+   const dx=f.x-cx,dy=f.y-cy,d=Math.hypot(dx,dy);
    if(d<f.r){if(d<0.01){f.y=o.y-f.r-1;continue}
-    f.x=cx+dx/d*f.r;f.y=cy2+dy/d*f.r;}
+    f.x=cx+dx/d*f.r;f.y=cy+dy/d*f.r;}
   }
  }
 }
-function y_f(v){return v;}
 function genWorld(){
- /* биомы: луга, лес, каменный круг */
  biomes=[];
  const zonesArr=[
   {type:'meadow',x:CX,y:CY,r:WORLD*0.16},
@@ -1153,21 +1151,17 @@ function genWorld(){
   {type:'flower',x:WORLD*0.5,y:WORLD*0.82,r:WORLD*0.12}
  ];
  zonesArr.forEach(z=>biomes.push(z));
- /* тропы между киосками и центром */
  paths=[];
  const hubs=[[.13,.16],[.83,.19],[.19,.81],[.79,.82],[.51,.14],[.64,.89]];
  hubs.forEach(h=>{
   paths.push({x1:h[0]*WORLD,y1:h[1]*WORLD,x2:CX,y2:CY,w:26});
  });
- /* препятствия */
  const fr=WORLD*0.058;
  obstacles=[{t:'fount',x:CX,y:CY,r:fr}];
- /* руины у Сердца: 8 колонн */
  for(let i=0;i<8;i++){
   const a=i/8*TAU+0.4;
   obstacles.push({t:'pillar',x:CX+Math.cos(a)*HEART_R*1.35,y:CY+Math.sin(a)*HEART_R*1.35,r:17});
  }
- /* деревья гуще в лесных биомах */
  const nTrees=Math.round(WORLD*WORLD/46000);
  for(let i=0;i<nTrees;i++){
   let x=0,y=0,ok=false,tries=0;
@@ -1185,7 +1179,6 @@ function genWorld(){
  const nB=Math.round(WORLD/130);
  for(let i=0;i<nB;i++){const a=rnd(0,TAU),d=rnd(WORLD*0.2,WORLD*0.44);
   obstacles.push({t:'bench',x:CX+Math.cos(a)*d-24,y:CY+Math.sin(a)*d-7,w:48,h:14});}
- /* камни */
  const nR=Math.round(WORLD/150);
  for(let i=0;i<nR;i++){
   let x=0,y=0,ok=false,tr=0;
@@ -1193,14 +1186,12 @@ function genWorld(){
    ok=Math.hypot(x-CX,y-CY)>WORLD*0.12&&!hitObs(x,y,40);}
   if(ok)obstacles.push({t:'rock',x:x,y:y,r:rnd(10,20)});
  }
- /* кустики (декор) */
  bushes=[];
  for(let i=0;i<Math.round(WORLD/95);i++){
   let x=rnd(40,WORLD-40),y=rnd(40,WORLD-40);
   if(hitObs(x,y,30))continue;
   bushes.push({x:x,y:y,s:rnd(8,16)});
  }
- /* кристаллы */
  crystals=[];
  const nC=Math.max(6,Math.round(WORLD*WORLD/400000));
  for(let i=0;i<nC;i++){
@@ -1221,7 +1212,7 @@ function rosterToFighter(p,idx){
   hp:hs.maxhp,maxhp:hs.maxhp,shield:0,power:0,
   alive:true,down:false,downT:0,revP:0,
   fireT:0,abCd:0,ult:0,reson:false,
-  slowT:0,invisT:0,invulT:0,reflectT:0,berserkT:0,empT:0,markT:0,inSmoke:false,
+  slowT:0,invisT:0,invulT:0,reflectT0:0,reflectT:0,berserkT:0,empT:0,markT:0,inSmoke:false,
   dashT:0,dashA:0,dashHit:{},emote:null,
   kills:0,crys:0,place:0,tpos:0,ai:null,aiType:p.aiType||BOT_TYPES[ri(0,3)]};
 }
@@ -1670,7 +1661,6 @@ function updFighterSim(f,inp,dt){
      b.revP=0;b.down=false;b.hp=b.maxhp*0.6;b.invulT=1;
      burst(b.x,b.y,'#2ee38b',10,140);
      if(f.isPlayer)toast('🤝 '+b.name+' поднят!');
-     if(b.isPlayer)toast('🤝 Ты поднят напарником');
      events.push({x:b.x,y:b.y,t:tGame,big:true});
     }
    }
@@ -1690,16 +1680,15 @@ function checkEnd(){
  if(Object.keys(tSet).length<=1)finishMatch();
 }
 function myPlaceAtExit(){
- const me=fighters[ME];
  let ahead=0;
  for(const f of fighters)if(f.alive&&f.team!==myTeam)ahead++;
  return teamSize>1?(teamAlive[myTeam]||0)+1:ahead+1;
 }
-async function finishMatch(res){
+function finishMatch(res){
  if(over)return;
  over=true;ST='end';
  clearInterval(NET.inTimer);stopMusic();
- if(!isTrain&&MM.matchId){try{await SB.from('eho_matches').update({status:'done'}).eq('id',MM.matchId);}catch(e){}}
+ if(!isTrain&&MM.matchId){try{SB.from('eho_matches').update({status:'done'}).eq('id',MM.matchId);}catch(e){}}
  const me=fighters[ME];
  let place=1,tpos=1;
  if(res){place=res.place;tpos=res.teamPlace;}
@@ -1728,8 +1717,8 @@ async function finishMatch(res){
  addHeroXp(HERO,xpGain);
  saveProfile();
  if(!isTrain&&SB){
-  try{await SB.from('eho_scores').upsert({pid:PROFILE.pid,name:PROFILE.name||'Боец',trophies:PROFILE.trophies},{onConflict:'pid'});}catch(e){}
-  if(PROFILE.uid)try{await SB.from('eho_accounts').update({trophies:PROFILE.trophies,wins:PROFILE.wins}).eq('uid',PROFILE.uid);}catch(e){}
+  try{SB.from('eho_scores').upsert({pid:PROFILE.pid,name:PROFILE.name||'Боец',trophies:PROFILE.trophies},{onConflict:'pid'});}catch(e){}
+  if(PROFILE.uid)try{SB.from('eho_accounts').update({trophies:PROFILE.trophies,wins:PROFILE.wins}).eq('uid',PROFILE.uid);}catch(e){}
  }
  showVictory(p,me,xpGain,earn);
  renderAll();
@@ -1746,9 +1735,9 @@ function showVictory(p,me,xpGain,earn){
  showScr(null);
  $('scrVict').classList.add('show');
  document.body.classList.remove('ingame');
- $('bExit').classList.remove('show');
+ const ex=$('bExit');
+ if(ex)ex.classList.remove('show');
  if(p===1)SND.win();else SND.lose();
- /* осколки падают при победе */
  if(p===1){
   for(let i=0;i<14;i++){
    const d=document.createElement('div');
@@ -1760,29 +1749,6 @@ function showVictory(p,me,xpGain,earn){
   }
  }
 }
-$('bExit').onclick=()=>{
- if(ST!=='play'||over)return;
- iLeftMatch=true;
- const p=myPlaceAtExit();
- const me=fighters[ME];
- const earn=p===1?8:p===2?6:p===3?4:p<=6?2:1;
- const xpGain=Math.round(((me.kills||0)*15+(me.crys||0)*5)*seasonMult());
- PROFILE.trophies+=earn;
- PROFILE.acXp=(PROFILE.acXp||0)+20;
- PROFILE.seasonXp=(PROFILE.seasonXp||0)+Math.round(20*seasonMult());
- PROFILE.matches++;
- ensureQuests();
- PROFILE.q.elim+=(me.kills||0);
- PROFILE.q.crys+=(me.crys||0);
- addHeroXp(HERO,xpGain);
- saveProfile();
- if(!isTrain&&SB){
-  try{await SB.from('eho_scores').upsert({pid:PROFILE.pid,name:PROFILE.name||'Боец',trophies:PROFILE.trophies},{onConflict:'pid'});}catch(e){}
- }
- over=true;ST='end';
- hideGame();
- showVictory(p,me,xpGain,earn);
-};
 $('bChest').onclick=()=>{openChest(false);};
 
 /* ===== ЧАСТЬ 3 КОНЕЦ — часть 4 идёт вплотную ===== */
